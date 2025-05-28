@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:asistiot/viewmodels/home_viewmodel.dart';
 
-
-class HomeView extends StatelessWidget {
+class HomeView extends ConsumerWidget {
   const HomeView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<HomeViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lastCommand = ref.watch(homeViewModelProvider);
+    final viewModel = ref.read(homeViewModelProvider.notifier);
 
     return Scaffold(
       backgroundColor: Colors.grey[300],
@@ -32,7 +32,7 @@ class HomeView extends StatelessWidget {
             const SizedBox(height: 40),
             GestureDetector(
               onTap: () {
-                viewModel.listenToVoiceCommand();
+                viewModel.listenToVoiceCommand(); // Actualiza estado
               },
               child: const CircleAvatar(
                 radius: 60,
@@ -47,7 +47,7 @@ class HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             Text(
-              'Último comando: ${viewModel.lastCommand}',
+              'Último comando: $lastCommand',
               style: const TextStyle(fontSize: 16),
             ),
           ],

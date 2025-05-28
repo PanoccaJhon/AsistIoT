@@ -1,23 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeViewModel extends ChangeNotifier {
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  String _lastCommand = '';
+class HomeViewModel extends StateNotifier<String> {
+  HomeViewModel() : super('');
 
-  String get lastCommand => _lastCommand;
-
-  Future<void> listenToVoiceCommand() async {
-    bool available = await _speech.initialize();
-    if (available) {
-      _speech.listen(onResult: (result) {
-        _lastCommand = result.recognizedWords;
-        notifyListeners();
-      });
-    }
+  void listenToVoiceCommand() {
+    // lógica para escuchar voz
+    state = 'nuevo comando de voz';
   }
 
-  void stopListening() {
-    _speech.stop();
-  }
+  String get lastCommand => state;
 }
+
+// Provider global
+final homeViewModelProvider = StateNotifierProvider<HomeViewModel, String>(
+  (ref) => HomeViewModel(),
+);
