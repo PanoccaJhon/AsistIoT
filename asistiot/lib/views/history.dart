@@ -5,10 +5,9 @@ class History extends StatelessWidget {
 
   // Ejemplo de datos del historial
   final List<String> historial = const [
-    'Busqueda 001 - 01/05/2025',
-    'Busqueda 001 - 02/05/2025',
-    'Busqueda 001 - 03/05/2025',
-    'Busqueda 001 - 04/05/2025',
+    'Lampara - Encendido - 11:00 02/05/2025' ,
+    'Lampara - Apagado - 10:30 02/05/2025',
+    'Lampara - Encendido - 10:00 02/05/2025' ,
   ];
 
   @override

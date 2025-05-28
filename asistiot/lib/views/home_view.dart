@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:asistiot/views/history.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:asistiot/viewmodels/home_viewmodel.dart';
 
@@ -49,6 +50,14 @@ class HomeView extends ConsumerWidget {
             Text(
               'Último comando: $lastCommand',
               style: const TextStyle(fontSize: 16),
+            ),
+            ElevatedButton(
+              onPressed: () { Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => History()),
+              );
+              },
+            child: const Text('Ir al Historial',style: TextStyle(color: Colors.blue)),
             ),
           ],
         ),
