@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:asistiot/views/history.dart';
+import 'package:asistiot/views/history_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:asistiot/viewmodels/home_viewmodel.dart';
 
@@ -54,7 +54,7 @@ class HomeView extends ConsumerWidget {
             ElevatedButton(
               onPressed: () { Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => History()),
+                MaterialPageRoute(builder: (context) => HistoryView()),
               );
               },
             child: const Text('Ir al Historial',style: TextStyle(color: Colors.blue)),
