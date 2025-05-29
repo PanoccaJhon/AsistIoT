@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodels/history_viewmodel.dart';
 
-class History extends StatelessWidget {
-  const History({Key? key}) : super(key: key);
-
-  // Datos simulados del historial
-  final List<String> historial = const [
-    'Lampara - Encendido - 11:00 02/05/2025',
-    'Lampara - Apagado - 10:30 02/05/2025',
-    'Lampara - Encendido - 10:00 02/05/2025',
-  ];
+class HistoryView extends ConsumerWidget {
+  const HistoryView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historial = ref.watch(historyProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial'),
