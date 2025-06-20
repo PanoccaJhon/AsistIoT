@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 // --- NUEVAS IMPORTACIONES PARA AMPLIFY ---
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_api/amplify_api.dart';
 import 'config/amplifyconfiguration.dart';
 // ------------------------------------
 
 import 'core/services/iot_repository.dart';
+import 'core/services/api_service.dart';
 import 'features/home/viewmodels/home_viewmodel.dart';
 import 'features/auth/views/auth_wrapper.dart';
 
@@ -30,7 +32,8 @@ Future<void> main() async {
 Future<void> _configureAmplify() async {
   try {
     final auth = AmplifyAuthCognito();
-    await Amplify.addPlugin(auth);
+    final api = AmplifyAPI();
+    await Amplify.addPlugins([auth, api]);
 
     // Configurar Amplify con el string de nuestro archivo de configuración
     await Amplify.configure(amplifyconfig);
@@ -53,7 +56,13 @@ class MyApp extends StatelessWidget {
         Provider<AuthService>(create: (_) => AuthService()), // <-- NUEVO
 
         // 2. Proveemos el IotRepository como antes
-        Provider<IotRepository>(create: (_) => MockIotRepository()),
+        Provider<ApiService>(create: (_) => ApiService()  ),
+        
+        Provider<IotRepository>(
+          create: (context) => ApiIotRepository(
+            apiService: context.read<ApiService>(),
+          ),
+        ),
 
         // 3. El ViewModel ahora puede leer las dependencias que necesita
         ChangeNotifierProvider(

@@ -101,6 +101,7 @@ class HomeViewModel extends ChangeNotifier {
 
     try {
       await _repository.updateLightState(deviceId, newStatus);
+      print("Comando enviado a la API exitosamente.");
     } catch (e) {
       _devices[deviceIndex].isOn = !newStatus;
       notifyListeners();

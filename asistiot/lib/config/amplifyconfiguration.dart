@@ -12,12 +12,15 @@ const amplifyconfig = ''' {
                 "CredentialsProvider": {
                     "CognitoIdentity": {
                         "Default": {
+                            "PoolId": "us-east-2_bxy5PUyNo",
                             "Region": "us-east-2"
                         }
                     }
                 },
                 "CognitoUserPool": {
-                    "Default": {              
+                    "Default": {
+                        "PoolId": "us-east-2_bxy5PUyNo",
+                        "AppClientId": "51g4cv0v1ovc6jf03dpbcon5bc",
                         "Region": "us-east-2"
                     }
                 },
@@ -25,6 +28,18 @@ const amplifyconfig = ''' {
                     "Default": {
                         "authenticationFlowType": "USER_SRP_AUTH"
                     }
+                }
+            }
+        }
+    },
+    "api": {
+        "plugins": {
+            "awsAPIPlugin": {
+                "AsistIoT_API": {
+                    "endpointType": "REST",
+                    "endpoint": "https://0pb8dcz70h.execute-api.us-east-2.amazonaws.com/v1",
+                    "region": "us-east-2",
+                    "authorizationType": "AMAZON_COGNITO_USER_POOLS"
                 }
             }
         }
