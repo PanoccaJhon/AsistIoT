@@ -73,4 +73,27 @@ class ApiService {
       rethrow; // Lanza la excepción para que el ViewModel la maneje.
     }
   }
+
+  /// Envía un comando genérico a un dispositivo.
+  Future<void> sendCommand(String deviceId, String commandPayload) async {
+    try {
+      // La API espera un mapa, por lo que decodificamos el string JSON que nos llega.
+      final body = HttpPayload.json(jsonDecode(commandPayload));
+
+      final restOperation = Amplify.API.post(
+        '/comandos/$deviceId', // Endpoint para enviar comandos
+        body: body,
+      );
+      final response = await restOperation.response;
+
+      if (response.statusCode != 202) {
+        throw Exception(
+          'Error al enviar comando, estado: ${response.statusCode}',
+        );
+      }
+    } on Exception catch (e) {
+      safePrint('Error al enviar comando a $deviceId: $e');
+      rethrow;
+    }
+  }
 }
