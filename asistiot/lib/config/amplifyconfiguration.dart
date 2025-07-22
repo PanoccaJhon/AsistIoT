@@ -31,5 +31,17 @@ const amplifyconfig = ''' {
                 }
             }
         }
+    },
+    "api": {
+        "plugins": {
+            "awsAPIPlugin": {
+                "AsistIoT_API": {
+                    "endpointType": "REST",
+                    "endpoint": "https://0pb8dcz70h.execute-api.us-east-2.amazonaws.com/v1",
+                    "region": "us-east-2",
+                    "authorizationType": "AMAZON_COGNITO_USER_POOLS"
+                }
+            }
+        }
     }
 }''';
