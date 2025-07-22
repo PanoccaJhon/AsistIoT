@@ -33,41 +33,29 @@ class ApiService {
     }
   }
 
-  Future<List<Device>> listDevices() async {
+  /// Obtiene la lista de dispositivos (en formato JSON crudo) para un usuario.
+  Future<List<dynamic>> listDevices() async {
     try {
-      final session = await Amplify.Auth.fetchAuthSession();
-      if (session.isSignedIn) {
-        // Si estamos logueados, obtenemos el token JWT.
-        final authUser = await Amplify.Auth.getCurrentUser();
-        final jwtToken =
-            authUser.toString(); // Obtenemos el token JWT del usuario
-        print('--- DIAGNÓSTICO DE SESIÓN ---');
-        print('El usuario ESTÁ logueado correctamente.');
-        print(
-          'Token JWT (primeros 30 caracteres): ${jwtToken.substring(0, 30)}...',
-        );
-        // Si necesitas el token completo para el Paso 4, descomenta la siguiente línea:
-        // print('Token JWT Completo: $jwtToken');
-        print('-----------------------------');
-      } else {
-        print('--- DIAGNÓSTICO DE SESIÓN ---');
-        print('ERROR: Amplify reporta que el usuario NO está logueado.');
-        print('-----------------------------');
-      }
-    } catch (e) {
-      print('--- DIAGNÓSTICO DE SESIÓN ---');
-      print('EXCEPCIÓN al llamar a fetchAuthSession: $e');
-      print('-----------------------------');
-    }
-    try {
-      final restOperation = Amplify.API.get('/dispositivos');
-      final response = await restOperation.response;
-      final jsonResponse = jsonDecode(response.decodeBody());
+      final attributes = await Amplify.Auth.fetchUserAttributes();
+      final userEmail =
+          attributes
+              .firstWhere(
+                (attr) =>
+                    attr.userAttributeKey == CognitoUserAttributeKey.email,
+              )
+              .value;
 
-      final List<dynamic> deviceListJson = jsonResponse;
-      return deviceListJson.map((json) => Device.fromJson(json)).toList();
-    } on ApiException catch (e) {
-      print('Error al listar dispositivos: $e');
+      final restOperation = Amplify.API.get(
+        '/dispositivos',
+        queryParameters: {'email': userEmail},
+      );
+      final response = await restOperation.response;
+      print(response.decodeBody());
+
+      // Devuelve la lista JSON directamente, el Repositorio se encargará de mapearla.
+      return jsonDecode(response.decodeBody()) as List<dynamic>;
+    } catch (e) {
+      safePrint('Error al listar dispositivos: $e');
       return [];
     }
   }
