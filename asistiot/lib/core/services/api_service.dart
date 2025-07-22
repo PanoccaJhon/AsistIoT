@@ -60,22 +60,17 @@ class ApiService {
     }
   }
 
-  Future<bool> sendCommand(
-    String thingName, {
-    required String component,
-    required String value,
-  }) async {
+  // --- NUEVOS MÉTODOS ---
+
+  /// Obtiene el estado (sombra) de un dispositivo específico.
+  Future<Map<String, dynamic>> getDeviceState(String deviceId) async {
     try {
-      final command = {'componente': component, 'valor': value};
-      final restOperation = Amplify.API.post(
-        '/dispositivos/$thingName/comando',
-        body: HttpPayload.json(command),
-      );
+      final restOperation = Amplify.API.get('/dispositivos/$deviceId/estado');
       final response = await restOperation.response;
-      return response.statusCode == 202; // 202 Accepted
+      return jsonDecode(response.decodeBody()) as Map<String, dynamic>;
     } on ApiException catch (e) {
-      print('Error al enviar comando: $e');
-      return false;
+      safePrint('Error al obtener estado del dispositivo $deviceId: $e');
+      rethrow; // Lanza la excepción para que el ViewModel la maneje.
     }
   }
 }
