@@ -1,39 +1,31 @@
-import '../../features/home/models/light_device.dart';
+import 'package:asistiot_project/core/services/api_service.dart';
+import '../../features/home/models/light_device.dart'; // Mantendremos este por ahora
+import '../../data/models/device.dart'; // El nuevo modelo
 
-// Esta es una clase abstracta (un contrato).
-// Define QUÉ se puede hacer, pero no CÓMO.
 abstract class IotRepository {
-  Future<List<LightDevice>> getDevices();
-  Future<void> updateLightState(String deviceId, bool isOn);
-  // Aquí irían otros métodos: updateAutoMode, etc.
+  Future<List<LightDevice>> getDevices(); // Cambiaremos esto en el futuro
+  Future<void> updateLightState(String thingName, bool isOn);
 }
 
+class ApiIotRepository implements IotRepository {
+  final ApiService _apiService;
 
-// Esta es una implementación FALSA para el desarrollo y pruebas.
-// Más tarde, la reemplazarás con una que hable con AWS IoT Core.
-class MockIotRepository implements IotRepository {
-  // Simula una base de datos en memoria
-  final List<LightDevice> _devices = [
-    LightDevice(id: 'esp32-01', name: 'Luz del Dormitorio', isOn: false, lightLevel: 50, motionDetected: true),
-    LightDevice(id: 'esp32-02', name: 'Luz de la Sala', isOn: true, isAutoMode: false, lightLevel: 400),
-    LightDevice(id: 'esp32-03', name: 'Luz del Estudio', isOn: false, lightLevel: 650, motionDetected: false),
-  ];
+  ApiIotRepository({required ApiService apiService}) : _apiService = apiService;
 
   @override
   Future<List<LightDevice>> getDevices() async {
-    // Simula una demora de red
-    await Future.delayed(const Duration(seconds: 1));
-    return _devices;
+    final devices = await _apiService.listDevices();
+    // Convertimos nuestro modelo de red a nuestro modelo de UI
+    // Esto es temporal, en el futuro tu modelo de UI sería más rico
+    return devices.map((d) => LightDevice(id: d.thingName, name: d.displayName)).toList();
   }
 
   @override
-  Future<void> updateLightState(String deviceId, bool isOn) async {
-    // Simula una llamada a la API y la actualización del estado
-    await Future.delayed(const Duration(milliseconds: 300));
-    final deviceIndex = _devices.indexWhere((d) => d.id == deviceId);
-    if (deviceIndex != -1) {
-      _devices[deviceIndex].isOn = isOn;
-      print('Dispositivo $deviceId actualizado a: ${isOn ? "Encendido" : "Apagado"}');
-    }
+  Future<void> updateLightState(String thingName, bool isOn) async {
+    await _apiService.sendCommand(
+      thingName,
+      component: 'luz1',
+      value: isOn ? 'ON' : 'OFF',
+    );
   }
 }
