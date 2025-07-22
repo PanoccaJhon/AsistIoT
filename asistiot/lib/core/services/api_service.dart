@@ -96,4 +96,19 @@ class ApiService {
       rethrow;
     }
   }
+
+  /// Desvincula (elimina la asociación) de un dispositivo.
+  Future<void> unlinkDevice(String deviceId) async {
+    try {
+      final restOperation = Amplify.API.delete('/dispositivos/$deviceId');
+      final response = await restOperation.response;
+
+      if (response.statusCode != 200) {
+        throw Exception('Error al desvincular, estado: ${response.statusCode}');
+      }
+    } on Exception catch (e) {
+      safePrint('Error al desvincular el dispositivo $deviceId: $e');
+      rethrow;
+    }
+  }
 }
