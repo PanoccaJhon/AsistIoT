@@ -214,12 +214,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: _signUp,
+                        child: const Text('REGISTRARME'),
                       ),
-                      onPressed: _signUp,
-                      child: const Text('REGISTRARME'),
-                    ),
               ],
             ),
           ),
