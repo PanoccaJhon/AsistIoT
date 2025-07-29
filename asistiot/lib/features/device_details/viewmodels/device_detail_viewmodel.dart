@@ -77,3 +77,42 @@ class DeviceDetailViewModel extends ChangeNotifier {
     }
   }
   
+
+  /// Envía el comando para activar/desactivar el modo automático.
+  Future<void> toggleAutoMode(bool isAuto) async {
+    if (_device == null) return;
+    
+    final originalState = _device!;
+    // Actualización optimista
+    _device = _device!.copyWith(isAutoMode: isAuto);
+    notifyListeners();
+
+    try {
+      final command = {'modo_auto': isAuto};
+      await _repository.sendCommand(deviceId, jsonEncode(command));
+    } catch (e) {
+      // Reversión en caso de error
+      _device = originalState;
+      _errorMessage = 'Fallo al cambiar modo automático.';
+      print('Error en toggleAutoMode: $e');
+      notifyListeners();
+    }
+  }
+
+  /// Llama al repositorio para desvincular el dispositivo.
+  Future<bool> unlinkDevice() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      // Esta función debe existir en tu repositorio y llamar a una Lambda DELETE.
+      await _repository.unlinkDevice(deviceId);
+      return true;
+    } catch (e) {
+      print('Error al desvincular: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+}
