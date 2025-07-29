@@ -60,11 +60,13 @@ class ApiService {
     try {
       // La API espera un mapa, por lo que decodificamos el string JSON que nos llega.
       final body = HttpPayload.json(jsonDecode(commandPayload));
+      print('Enviando comando a $deviceId: $commandPayload');
 
       final restOperation = Amplify.API.post(
-        '/comandos/$deviceId', // Endpoint para enviar comandos
+        '/dispositivos/$deviceId', // Endpoint para enviar comandos
         body: body,
       );
+
       final response = await restOperation.response;
 
       if (response.statusCode != 202) {
