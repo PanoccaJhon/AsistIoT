@@ -46,3 +46,34 @@ class DeviceDetailViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+  
+  /// Permite refrescar los datos desde la UI (ej. con un pull-to-refresh).
+  Future<void> refresh() async {
+    await _fetchDeviceDetails();
+  }
+
+  /// Envía el comando para encender/apagar una luz.
+  Future<void> toggleLight(bool isOn , int luzIndex) async {
+    if (_device == null) return;
+
+    final originalState = _device!;
+    // Actualización optimista: Cambia el estado en la UI inmediatamente.
+    if (luzIndex == 1) {
+      _device = _device!.copyWith(luz1: isOn);
+    } else if (luzIndex == 2) {
+      _device = _device!.copyWith(luz2: isOn);
+    }
+    notifyListeners();
+
+    try {
+      final command = { 'luz1': _device!.luz1 ? 'ON' : 'OFF', 'luz2': _device!.luz2 ? 'ON' : 'OFF'};
+      await _repository.sendCommand(deviceId, jsonEncode(command));
+    } catch (e) {
+      // Si falla, revierte al estado original y muestra el error.
+      _device = originalState;
+      _errorMessage = 'Fallo al enviar comando de luz.';
+      print('Error en toggleLight: $e');
+      notifyListeners();
+    }
+  }
+  
