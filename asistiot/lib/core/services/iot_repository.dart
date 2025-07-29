@@ -61,4 +61,12 @@ class ApiIotRepository implements IotRepository {
     // Llama a la API para desvincular el dispositivo (DELETE).
     return _apiService.unlinkDevice(deviceId);
   }
+
+  @override
+  Future<List<MotionEvent>> getMotionHistory(String thingName) async {
+    // Llama a la API para obtener el historial de eventos de movimiento.
+    final eventsData = await _apiService.getMotionHistory(thingName);
+
+    return eventsData;
+  }
 }
