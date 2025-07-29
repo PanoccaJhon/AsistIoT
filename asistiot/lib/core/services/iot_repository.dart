@@ -30,6 +30,22 @@ class ApiIotRepository implements IotRepository {
   ApiIotRepository({required ApiService apiService}) : _apiService = apiService;
 
   @override
+  Future<LightDevice> getDeviceById(String deviceId) async {
+    final deviceData = await _apiService.getDeviceById(deviceId);
+
+    final device = LightDevice(
+      id: deviceData['thingName'],
+      name: deviceData['thingName'],
+      luz1: deviceData['luz1_estado'] == 'ON',
+      luz2: deviceData['luz2_estado'] == 'ON',
+      isAutoMode: deviceData['modo_auto'] ?? true,
+      lightLevel: deviceData['lux'],
+      lastSeenTimestamp: deviceData['timestamp'] as int? ?? 0,
+    );
+    return device;
+  }
+
+  @override
   Future<List<LightDevice>> getDevices() async {
     final devicesData = await _apiService.listDevices();
     // Aquí se podrían combinar los datos de la lista con su estado si fuera necesario
@@ -39,8 +55,10 @@ class ApiIotRepository implements IotRepository {
             id: d['thingName'],
             name: d['thingName'],
             online: d['online'],
+            luz1: d['luz1'] == 'ON',
+            luz2: d['luz2'] == 'ON',
           ),
-        ) // Simplificado
+        )
         .toList();
   }
 
