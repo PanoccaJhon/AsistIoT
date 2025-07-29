@@ -165,12 +165,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          onPressed: _signIn,
+                          child: const Text('INICIAR SESIÓN'),
                         ),
-                        onPressed: _signIn,
-                        child: const Text('INICIAR SESIÓN'),
-                      ),
                   const SizedBox(height: 16),
 
                   // Botón para ir a Registro
