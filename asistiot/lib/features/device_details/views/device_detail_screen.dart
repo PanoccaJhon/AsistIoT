@@ -188,6 +188,64 @@ class DeviceDetailScreen extends StatelessWidget {
                     
                     const SizedBox(height: 24), // Espaciador
 
+                    // --- INICIO DE NUEVOS BOTONES DE ACCIÓN ---
+
+                    // Botón para ver historial
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.history_rounded),
+                      label: const Text('Ver Historial de Movimientos'),
+                      onPressed: () {
+                        // Navegar a la pantalla de historial
+                        // Navigator.of(context).push(MaterialPageRoute(
+                        //   builder: (context) => HistoryScreen(deviceId: device.id),
+                        // ));
+                      },
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Botón para desvincular
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.link_off_rounded, color: Colors.white),
+                      label: const Text('Desvincular Dispositivo', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                      ),
+                      onPressed: () {
+                        // Mostrar diálogo de confirmación antes de desvincular
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext dialogContext) {
+                            return AlertDialog(
+                              title: const Text('¿Desvincular dispositivo?'),
+                              content: const Text('Esta acción es permanente y eliminará el dispositivo de tu cuenta.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Cancelar'),
+                                  onPressed: () => Navigator.of(dialogContext).pop(),
+                                ),
+                                TextButton(
+                                  child: const Text('Desvincular', style: TextStyle(color: Colors.red)),
+                                  onPressed: () async {
+                                    // Llamar al método en el ViewModel
+                                    final success = await viewModel.unlinkDevice();
+                                    Navigator.of(dialogContext).pop(); // Cerrar diálogo
+                                    if (success) {
+                                      Navigator.of(context).pop(); // Volver a la lista
+                                    } else {
+                                      // Mostrar un snackbar de error si falla
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Error al desvincular el dispositivo.')),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               )
