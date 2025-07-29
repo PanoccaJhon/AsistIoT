@@ -93,22 +93,20 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   maxLength: 6,
-                  validator:
-                      (value) =>
-                          (value?.length ?? 0) != 6
-                              ? 'El código debe tener 6 dígitos.'
-                              : null,
+                  validator: (value) => (value?.length ?? 0) != 6
+                      ? 'El código debe tener 6 dígitos.'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: _confirmSignUp,
+                        child: const Text('CONFIRMAR CUENTA'),
                       ),
-                      onPressed: _confirmSignUp,
-                      child: const Text('CONFIRMAR CUENTA'),
-                    ),
               ],
             ),
           ),
