@@ -16,6 +16,32 @@ class ApiService {
     }
   }
 
+  /// Asocia un nuevo dispositivo a la cuenta del usuario.
+  Future<bool> associateDevice(String thingName) async {
+    // (Este método se mantiene sin cambios, ya es correcto)
+    try {
+      final result = await Amplify.Auth.fetchUserAttributes();
+      final userEmail = result
+          .firstWhere(
+            (attr) => attr.userAttributeKey == CognitoUserAttributeKey.email,
+          )
+          .value;
+
+      final body = HttpPayload.json({
+        'thingName': thingName,
+        'email': userEmail,
+      });
+
+      final restOperation = Amplify.API.post('/dispositivos', body: body);
+      final response = await restOperation.response;
+      safePrint('Respuesta de asociación: ${response.decodeBody()}');
+      return response.statusCode == 200;
+    } catch (e) {
+      safePrint('Error al asociar dispositivo: $e');
+      return false;
+    }
+  }
+
   /// Obtiene la lista de dispositivos (en formato JSON crudo) para un usuario.
   Future<List<dynamic>> listDevices() async {
     try {
