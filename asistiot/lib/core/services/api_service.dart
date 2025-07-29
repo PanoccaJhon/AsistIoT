@@ -1,35 +1,18 @@
 import 'dart:convert';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:asistiot_project/data/models/motion_event.dart';
 
 /// ApiService es responsable de todas las comunicaciones directas con AWS a través de Amplify.
 /// No conoce los modelos de la UI, solo maneja peticiones y respuestas crudas.
 class ApiService {
-  /// Asocia un nuevo dispositivo a la cuenta del usuario.
-  Future<bool> associateDevice(String thingName) async {
-    // (Este método se mantiene sin cambios, ya es correcto)
+  Future<dynamic> getDeviceById(String deviceId) async {
     try {
-      final result = await Amplify.Auth.fetchUserAttributes();
-      final userEmail =
-          result
-              .firstWhere(
-                (attr) =>
-                    attr.userAttributeKey == CognitoUserAttributeKey.email,
-              )
-              .value;
-
-      final body = HttpPayload.json({
-        'thingName': thingName,
-        'email': userEmail,
-      });
-
-      final restOperation = Amplify.API.post('/dispositivos', body: body);
+      final restOperation = Amplify.API.get('/dispositivos/$deviceId');
       final response = await restOperation.response;
-      safePrint('Respuesta de asociación: ${response.decodeBody()}');
-      return response.statusCode == 200;
-    } catch (e) {
-      safePrint('Error al asociar dispositivo: $e');
-      return false;
+      return jsonDecode(response.decodeBody());
+    } on ApiException catch (e) {
+      safePrint('Error al obtener dispositivo $deviceId: $e');
+      rethrow;
     }
   }
 
@@ -37,13 +20,11 @@ class ApiService {
   Future<List<dynamic>> listDevices() async {
     try {
       final attributes = await Amplify.Auth.fetchUserAttributes();
-      final userEmail =
-          attributes
-              .firstWhere(
-                (attr) =>
-                    attr.userAttributeKey == CognitoUserAttributeKey.email,
-              )
-              .value;
+      final userEmail = attributes
+          .firstWhere(
+            (attr) => attr.userAttributeKey == CognitoUserAttributeKey.email,
+          )
+          .value;
 
       final restOperation = Amplify.API.get(
         '/dispositivos',
