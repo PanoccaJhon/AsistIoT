@@ -9,14 +9,6 @@ const amplifyconfig = ''' {
                 "IdentityManager": {
                     "Default": {}
                 },
-                "CredentialsProvider": {
-                    "CognitoIdentity": {
-                        "Default": {
-                            "PoolId": "us-east-2_bxy5PUyNo",
-                            "Region": "us-east-2"
-                        }
-                    }
-                },
                 "CognitoUserPool": {
                     "Default": {
                         "PoolId": "us-east-2_bxy5PUyNo",
@@ -39,7 +31,7 @@ const amplifyconfig = ''' {
                     "endpointType": "REST",
                     "endpoint": "https://0pb8dcz70h.execute-api.us-east-2.amazonaws.com/v1",
                     "region": "us-east-2",
-                    "authorizationType": "AMAZON_COGNITO_USER_POOLS"
+                    "authorizationType": "NONE"
                 }
             }
         }

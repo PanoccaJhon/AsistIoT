@@ -28,47 +28,65 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-Future<void> _signIn() async {
-  if (!_formKey.currentState!.validate()) return;
 
-  setState(() { _isLoading = true; });
+  Future<void> _signIn() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  final authService = context.read<AuthService>();
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
-  
-  try {
-    final success = await authService.signInUser(
-      username: email,
-      password: password,
-    );
-    // Si hay éxito, el AuthWrapper se encarga de navegar
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(backgroundColor: Colors.red, content: Text('Email o contraseña incorrectos.')),
+    final authService = context.read<AuthService>();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final success = await authService.signInUser(
+        username: email,
+        password: password,
       );
-    }
-  } on UserNotConfirmedException { // <-- NUEVO: Capturar este error específico
-    print("El usuario no está confirmado. Redirigiendo a la pantalla de confirmación.");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Tu cuenta no está confirmada. Por favor, introduce el código.')),
-    );
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ConfirmationScreen(email: email)),
-    );
-  } on Exception catch (e) {
-    print("Error de login: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(backgroundColor: Colors.red, content: Text('Ocurrió un error inesperado.')),
-    );
-  } finally {
-    if (mounted) {
-      setState(() { _isLoading = false; });
+      // Si hay éxito, el AuthWrapper se encarga de navegar
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.red,
+            content: Text('Email o contraseña incorrectos.'),
+          ),
+        );
+      }
+    } on UserNotConfirmedException {
+      // <-- NUEVO: Capturar este error específico
+      print(
+        "El usuario no está confirmado. Redirigiendo a la pantalla de confirmación.",
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tu cuenta no está confirmada. Por favor, introduce el código.',
+          ),
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ConfirmationScreen(email: email)),
+      );
+    } on Exception catch (e) {
+      print("Error de login: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Ocurrió un error inesperado.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +112,8 @@ Future<void> _signIn() async {
                     'Bienvenido a AsistIoT',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -115,7 +133,9 @@ Future<void> _signIn() async {
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty || !value.contains('@')) {
+                      if (value == null ||
+                          value.isEmpty ||
+                          !value.contains('@')) {
                         return 'Por favor, introduce un email válido.';
                       }
                       return null;
@@ -162,13 +182,15 @@ Future<void> _signIn() async {
                         onPressed: () {
                           // Navegar a la pantalla de registro
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SignUpScreen())
+                            MaterialPageRoute(
+                              builder: (_) => const SignUpScreen(),
+                            ),
                           );
                         },
                         child: const Text('Regístrate'),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

@@ -23,8 +23,10 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
 
   Future<void> _confirmSignUp() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    setState(() { _isLoading = true; });
+
+    setState(() {
+      _isLoading = true;
+    });
 
     final authService = context.read<AuthService>();
     final success = await authService.confirmSignUp(
@@ -33,7 +35,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     );
 
     if (!mounted) return;
-    setState(() { _isLoading = false; });
+    setState(() {
+      _isLoading = false;
+    });
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,7 +73,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 Text(
                   'Introduce tu código',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -87,7 +93,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   maxLength: 6,
-                  validator: (value) => (value?.length ?? 0) != 6 ? 'El código debe tener 6 dígitos.' : null,
+                  validator: (value) => (value?.length ?? 0) != 6
+                      ? 'El código debe tener 6 dígitos.'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 _isLoading

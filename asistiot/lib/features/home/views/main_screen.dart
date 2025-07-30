@@ -1,5 +1,6 @@
 import 'package:asistiot_project/features/home/views/home_screen.dart';
 import 'package:asistiot_project/features/profile/views/profile_screen.dart';
+import 'package:asistiot_project/features/routines/views/routines_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   // Lista de las pantallas que se mostrarán en cada pestaña
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(), // Nuestra pantalla principal de dispositivos
-    Text('Próximamente: Pantalla de Rutinas'), // Placeholder
+    RoutinesScreen(),
     ProfileScreen(), // La nueva pantalla de perfil
   ];
 
@@ -56,3 +57,5 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+
+

@@ -4,6 +4,7 @@ import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
 // Enum para representar los diferentes estados de autenticación
 enum AuthStatus { signedIn, signedOut, sessionExpired, checking }
+
 enum SignUpResult { success, userAlreadyExists, failure }
 
 class AuthService {
@@ -61,27 +62,29 @@ class AuthService {
     }
   }
 
-  Future<SignUpResult> signUpUser({ // <-- MODIFICADO: Devuelve nuestro enum
-  required String username,
-  required String password,
-  required String name,
-}) async {
-  try {
-    final userAttributes = {AuthUserAttributeKey.name: name};
-    await Amplify.Auth.signUp(
-      username: username,
-      password: password,
-      options: SignUpOptions(userAttributes: userAttributes),
-    );
-    return SignUpResult.success;
-  } on UsernameExistsException { // <-- MODIFICADO: Capturamos el error específico
-    print('Este usuario ya existe, pero puede no estar confirmado.');
-    return SignUpResult.userAlreadyExists;
-  } on AuthException catch (e) {
-    print('Error al registrar usuario: ${e.message}');
-    return SignUpResult.failure;
+  Future<SignUpResult> signUpUser({
+    // <-- MODIFICADO: Devuelve nuestro enum
+    required String username,
+    required String password,
+    required String name,
+  }) async {
+    try {
+      final userAttributes = {AuthUserAttributeKey.name: name};
+      await Amplify.Auth.signUp(
+        username: username,
+        password: password,
+        options: SignUpOptions(userAttributes: userAttributes),
+      );
+      return SignUpResult.success;
+    } on UsernameExistsException {
+      // <-- MODIFICADO: Capturamos el error específico
+      print('Este usuario ya existe, pero puede no estar confirmado.');
+      return SignUpResult.userAlreadyExists;
+    } on AuthException catch (e) {
+      print('Error al registrar usuario: ${e.message}');
+      return SignUpResult.failure;
+    }
   }
-}
 
   Future<bool> confirmSignUp({
     required String username,

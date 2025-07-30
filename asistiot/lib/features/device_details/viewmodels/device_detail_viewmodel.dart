@@ -1,43 +1,118 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../../../data/models/light_device.dart'; // Asegúrate de que la ruta sea correcta
 import '../../../core/services/iot_repository.dart';
-import '../../home/models/light_device.dart'; // Reutilizamos el mismo modelo
 
 class DeviceDetailViewModel extends ChangeNotifier {
-  final IotRepository _repository;
   final String deviceId;
-
-  DeviceDetailViewModel({required this.deviceId, required IotRepository repository})
-      : _repository = repository {
-    _loadDeviceDetails();
-  }
-
-  bool _isLoading = true;
-  bool get isLoading => _isLoading;
+  final IotRepository _repository;
 
   LightDevice? _device;
   LightDevice? get device => _device;
 
-  Future<void> _loadDeviceDetails() async {
+  bool _isLoading = true;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  DeviceDetailViewModel({
+    required this.deviceId,
+    required IotRepository repository,
+  }) : _repository = repository {
+    // Al crear el ViewModel, inmediatamente busca los detalles del dispositivo.
+    _fetchDeviceDetails();
+  }
+
+  /// Obtiene el estado más reciente del dispositivo desde el repositorio.
+  Future<void> _fetchDeviceDetails() async {
     _isLoading = true;
     notifyListeners();
 
-    // En una app real, aquí harías una llamada para obtener solo este dispositivo.
-    // En nuestro mock, lo buscaremos en la lista completa.
-    final allDevices = await _repository.getDevices();
-    _device = allDevices.firstWhere((d) => d.id == deviceId);
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      final device = await _repository.getDeviceById(deviceId);
+      final state = await _repository.getDeviceState(deviceId);
+      // Actualiza el dispositivo con los datos obtenidos
+      _device = device.copyWith(
+        online: state['online'] ?? false,
+        lastSeenTimestamp: state['last_updated'] as int? ?? 0,
+      );
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Error al cargar los datos del dispositivo: $e';
+      print(_errorMessage);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+  
+  /// Permite refrescar los datos desde la UI (ej. con un pull-to-refresh).
+  Future<void> refresh() async {
+    await _fetchDeviceDetails();
   }
 
-  // Ejemplo de otra acción para esta pantalla
-  Future<void> toggleAutoMode(bool isEnabled) async {
+  /// Envía el comando para encender/apagar una luz.
+  Future<void> toggleLight(bool isOn , int luzIndex) async {
     if (_device == null) return;
-    
-    _device!.isAutoMode = isEnabled;
+
+    final originalState = _device!;
+    // Actualización optimista: Cambia el estado en la UI inmediatamente.
+    if (luzIndex == 1) {
+      _device = _device!.copyWith(luz1: isOn);
+    } else if (luzIndex == 2) {
+      _device = _device!.copyWith(luz2: isOn);
+    }
     notifyListeners();
 
-    // Aquí llamarías al repositorio para persistir el cambio
-    // await _repository.updateAutoMode(deviceId, isEnabled);
+    try {
+      final command = { 'luz1': _device!.luz1 ? 'ON' : 'OFF', 'luz2': _device!.luz2 ? 'ON' : 'OFF'};
+      await _repository.sendCommand(deviceId, jsonEncode(command));
+    } catch (e) {
+      // Si falla, revierte al estado original y muestra el error.
+      _device = originalState;
+      _errorMessage = 'Fallo al enviar comando de luz.';
+      print('Error en toggleLight: $e');
+      notifyListeners();
+    }
+  }
+  
+
+  /// Envía el comando para activar/desactivar el modo automático.
+  Future<void> toggleAutoMode(bool isAuto) async {
+    if (_device == null) return;
+    
+    final originalState = _device!;
+    // Actualización optimista
+    _device = _device!.copyWith(isAutoMode: isAuto);
+    notifyListeners();
+
+    try {
+      final command = {'modo_auto': isAuto};
+      await _repository.sendCommand(deviceId, jsonEncode(command));
+    } catch (e) {
+      // Reversión en caso de error
+      _device = originalState;
+      _errorMessage = 'Fallo al cambiar modo automático.';
+      print('Error en toggleAutoMode: $e');
+      notifyListeners();
+    }
+  }
+
+  /// Llama al repositorio para desvincular el dispositivo.
+  Future<bool> unlinkDevice() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      // Esta función debe existir en tu repositorio y llamar a una Lambda DELETE.
+      await _repository.unlinkDevice(deviceId);
+      return true;
+    } catch (e) {
+      print('Error al desvincular: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
