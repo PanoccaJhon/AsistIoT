@@ -1,5 +1,5 @@
 esp32/sketch_may28a/secrets.h
-
+asistiot/assets/dialogflow_credentials.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/flutter,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=flutter,visualstudiocode
