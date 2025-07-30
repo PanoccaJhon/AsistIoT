@@ -5,7 +5,6 @@ import 'package:asistiot_project/features/home/viewmodels/home_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// La pantalla ahora es un StatefulWidget para poder cargar datos en initState.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,8 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Usamos WidgetsBinding para asegurarnos de que el context esté disponible
-    // y llamamos a la función que carga todos los datos iniciales.
+    // La carga inicial se mantiene igual
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().loadInitialData();
     });
@@ -26,34 +24,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos el ViewModel para que la UI se reconstruya con cada cambio.
     final viewModel = context.watch<HomeViewModel>();
 
     return Scaffold(
       appBar: AppBar(
-        // El título ahora es más específico para esta pantalla.
         title: const Text('Mis Dispositivos'),
         actions: [
-          // Botón para ir a la pantalla de añadir un nuevo dispositivo.
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Añadir Dispositivo',
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              // MODIFICADO: Espera a que la pantalla se cierre para refrescar
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AddDeviceScreen()),
               );
+              // Llama a refresh en el ViewModel
+              if (mounted) {
+                context.read<HomeViewModel>().refresh();
+              }
             },
           ),
         ],
       ),
-      // El cuerpo principal de la pantalla.
       body: _buildBody(context, viewModel),
-      // El botón flotante para el control por voz.
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Simulación de la función de voz.
-          viewModel.processVoiceCommand("encender luz del dormitorio");
+          viewModel.isListening ? viewModel.stopListening() : viewModel.startListening();
         },
         tooltip: 'Control por Voz',
         child: const Icon(Icons.mic),
@@ -61,14 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Construye el cuerpo de la pantalla basado en el estado del ViewModel.
   Widget _buildBody(BuildContext context, HomeViewModel viewModel) {
-    // Muestra un indicador de carga mientras los datos se están obteniendo.
-    if (viewModel.isLoading) {
+    if (viewModel.isLoading && viewModel.devices.isEmpty) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
 
-    // Muestra un mensaje amigable si la lista de dispositivos está vacía.
     if (viewModel.devices.isEmpty) {
       return Center(
         child: Padding(
@@ -78,10 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.devices_other, size: 60, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              const Text(
-                'No hay dispositivos',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              const Text('No hay dispositivos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               const Text(
                 'Añade tu primer dispositivo usando el botón "+" en la esquina superior.',
@@ -93,17 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-
-    // Muestra la lista de dispositivos si todo está correcto.
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: viewModel.devices.length,
-      itemBuilder: (context, index) {
-        final device = viewModel.devices[index];
-        return _DeviceCard(device: device);
-      },
-    );
-
+    
+    //RefreshIndicator para "pull-to-refresh"
     return RefreshIndicator.adaptive(
       onRefresh: viewModel.refresh,
       child: ListView.builder(
@@ -117,8 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-  
-
 /// Widget para mostrar la tarjeta de un solo dispositivo.
 class _DeviceCard extends StatelessWidget {
   const _DeviceCard({required this.device});
@@ -127,37 +107,52 @@ class _DeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos context.read aquí para llamar a funciones sin causar reconstrucciones innecesarias.
     final viewModel = context.read<HomeViewModel>();
+    final bool isOnline = device.online;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+      // Cambia el color y la sombra si está desconectado para un efecto visual más claro.
+      color: isOnline ? null : Theme.of(context).colorScheme.surface.withOpacity(0.5),
+      elevation: isOnline ? null : 0.5,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         onTap: () {
-          // Navega a la pantalla de detalles al tocar la tarjeta.
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DeviceDetailScreen(deviceId: device.id),
-            ),
-          );
+          
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DeviceDetailScreen(deviceId: device.id),
+              ),
+            ).then((_) {
+              // Refresca la lista al volver de la pantalla de detalles.
+              if (context.mounted) {
+                viewModel.refresh();
+              }
+            });
+          
         },
         leading: Icon(
-          Icons.lightbulb_outline,
-          color: device.isOn ? Colors.amber.shade700 : Colors.grey.shade600,
+          Icons.lightbulb_outline_rounded,
+          // El color ahora solo depende de si la luz está ON, `enabled` se encarga del gris.
+          color: device.luz1 ? Colors.amber.shade700 : null,
           size: 40,
         ),
-        title: Text(device.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          'Modo automático: ${device.isAutoMode ? "Activado" : "Desactivado"}\nNivel de luz: ${device.lightLevel ?? "N/A"} lux',
+        title: Row(
+          children: [
+            Text(device.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 5,
+              backgroundColor: isOnline ? Colors.green.shade400 : Colors.grey.shade400,
+            ),
+          ],
         ),
-        trailing: Switch.adaptive(
-          value: device.isOn,
-          onChanged: (newValue) {
-            // Llama a la función del ViewModel para cambiar el estado de la luz.
-            viewModel.toggleLight(device.id);
-          },
+        subtitle: Text(
+          isOnline 
+              ? 'Conectado • Modo auto: ${device.isAutoMode ? "ON" : "OFF"}'
+              : 'Desconectado',
+          style: TextStyle(color: isOnline ? null : Colors.red.shade400),
         ),
       ),
     );
