@@ -1,6 +1,6 @@
 import 'package:asistiot_project/features/add_device/views/add_device_screen.dart';
 import 'package:asistiot_project/features/device_details/views/device_detail_screen.dart';
-import 'package:asistiot_project/features/home/models/light_device.dart';
+import 'package:asistiot_project/data/models/light_device.dart';
 import 'package:asistiot_project/features/home/viewmodels/home_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -103,8 +103,21 @@ class _HomeScreenState extends State<HomeScreen> {
         return _DeviceCard(device: device);
       },
     );
+
+    return RefreshIndicator.adaptive(
+      onRefresh: viewModel.refresh,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(8.0),
+        itemCount: viewModel.devices.length,
+        itemBuilder: (context, index) {
+          final device = viewModel.devices[index];
+          return _DeviceCard(device: device);
+        },
+      ),
+    );
   }
 }
+  
 
 /// Widget para mostrar la tarjeta de un solo dispositivo.
 class _DeviceCard extends StatelessWidget {
