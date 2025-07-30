@@ -3,7 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart'; // <-- NUEVO: Para el tip
 
 import '../../../core/services/iot_repository.dart';
 import '../../../core/services/auth_service.dart'; // <-- NUEVO: Importar el servicio de Auth
-import '../models/light_device.dart';
+import '../../../data/models/light_device.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final IotRepository _repository;
@@ -13,7 +13,9 @@ class HomeViewModel extends ChangeNotifier {
     required IotRepository repository,
     required AuthService authService, // <-- MODIFICADO: Recibir AuthService en el constructor
   })  : _repository = repository,
-        _authService = authService;
+        _authService = authService{
+          _initSpeech();
+        }
 
   // --- ESTADO ---
   bool _isLoading = false;
@@ -27,7 +29,23 @@ class HomeViewModel extends ChangeNotifier {
   String? get userDisplayName => _userDisplayName;
   // ---------------------------------------------------
 
+  bool _isListening = false;
+  bool get isListening => _isListening;
+  
+  String _lastRecognizedWords = "";
+  String get lastRecognizedWords => _lastRecognizedWords;
+
   // --- LÓGICA / ACCIONES ---
+  void _initSpeech() async {
+    
+  }
+
+  void startListening() async {
+    
+  }
+  void stopListening() {
+    
+  }
 
   // NUEVO: Orquesta la carga de datos inicial cuando la pantalla aparece
   Future<void> loadInitialData() async {
