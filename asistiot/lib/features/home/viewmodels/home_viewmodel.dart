@@ -24,10 +24,11 @@ class HomeViewModel extends ChangeNotifier {
   List<LightDevice> _devices = [];
   List<LightDevice> get devices => List.unmodifiable(_devices);
 
-  // --- NUEVO: Estado para la información del usuario ---
   String? _userDisplayName;
   String? get userDisplayName => _userDisplayName;
-  // ---------------------------------------------------
+
+  String? _userEmail;
+  String? get userEmail => _userEmail;
 
   bool _isListening = false;
   bool get isListening => _isListening;
@@ -62,36 +63,42 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
   
-  // NUEVO: Método privado para obtener los datos del usuario logueado
+  // Método privado para obtener los datos del usuario logueado y el email
   Future<void> _loadCurrentUser() async {
-  try {
-    // 1. Usamos fetchUserAttributes() que nos devuelve una lista de todos los atributos.
-    final attributes = await Amplify.Auth.fetchUserAttributes();
+    try {
+      final attributes = await Amplify.Auth.fetchUserAttributes();
 
-    // 2. Buscamos en la lista el atributo que corresponde al 'name'.
-    final nameAttribute = attributes.firstWhere(
-      (element) => element.userAttributeKey == AuthUserAttributeKey.name,
-      // 3. Si por alguna razón no encontramos el 'name', buscamos el 'email' como alternativa.
-      orElse: () => attributes.firstWhere(
-        (element) => element.userAttributeKey == AuthUserAttributeKey.email,
-        // 4. Si tampoco hay email, usamos un valor por defecto.
-        orElse: () => const AuthUserAttribute(
-          userAttributeKey: AuthUserAttributeKey.name,
-          value: 'Usuario Desconocido',
+      // Buscar el nombre para mostrar
+      final nameAttribute = attributes.firstWhere(
+        (element) => element.userAttributeKey == AuthUserAttributeKey.name,
+        orElse: () => attributes.firstWhere(
+          (element) => element.userAttributeKey == AuthUserAttributeKey.email,
         ),
-      ),
-    );
-    
-    // 5. Asignamos el valor encontrado a nuestra variable de estado.
-    _userDisplayName = nameAttribute.value;
+      );
 
-  } on Exception catch (e) {
-    print("Error cargando atributos del usuario: $e");
-    _userDisplayName = "Usuario"; // Un valor por defecto en caso de cualquier error
+      final emailAttribute = attributes.firstWhere(
+        (element) => element.userAttributeKey == AuthUserAttributeKey.email,
+        orElse: () => throw Exception('Email no disponible'),
+      );
+
+      _userDisplayName = nameAttribute.value;
+      _userEmail = emailAttribute.value;
+
+      try {
+        final emailAttribute = attributes.firstWhere(
+          (element) => element.userAttributeKey == AuthUserAttributeKey.email,
+        );
+        _userEmail = emailAttribute.value;
+      } catch (e) {
+        _userEmail = 'Email no disponible';
+      }
+
+    } on Exception catch (e) {
+      print("Error cargando atributos del usuario: $e");
+      _userDisplayName = "Usuario";
+      _userEmail = ""; // Valores por defecto en caso de error
+    }
   }
-  
-  // No necesitamos llamar a notifyListeners() aquí si lo hacemos en loadInitialData()
-}
 
   // MODIFICADO: Ahora es parte de loadInitialData, pero se mantiene por si se necesita recargar solo los devices.
   Future<void> fetchDevices() async {
