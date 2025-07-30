@@ -1,4 +1,4 @@
-package com.example.asistiot
+package com.example.asistiot_project
 
 import io.flutter.embedding.android.FlutterActivity
 
