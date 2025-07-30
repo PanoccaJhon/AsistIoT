@@ -12,7 +12,7 @@ abstract class IotRepository {
 
   /// Obtiene el estado más reciente (sombra) de un único dispositivo.
   Future<Map<String, dynamic>> getDeviceState(String deviceId);
-
+  
   /// Envía un comando genérico en formato JSON a un dispositivo.
   Future<void> sendCommand(String deviceId, String commandPayload);
 
@@ -23,6 +23,7 @@ abstract class IotRepository {
   Future<List<MotionEvent>> getMotionHistory(String thingName);
 }
 
+
 /// La implementación concreta del repositorio que usa una API (ApiService).
 class ApiIotRepository implements IotRepository {
   final ApiService _apiService;
@@ -32,7 +33,7 @@ class ApiIotRepository implements IotRepository {
   @override
   Future<LightDevice> getDeviceById(String deviceId) async {
     final deviceData = await _apiService.getDeviceById(deviceId);
-
+    
     final device = LightDevice(
       id: deviceData['thingName'],
       name: deviceData['thingName'],
@@ -50,15 +51,13 @@ class ApiIotRepository implements IotRepository {
     final devicesData = await _apiService.listDevices();
     // Aquí se podrían combinar los datos de la lista con su estado si fuera necesario
     return devicesData
-        .map(
-          (d) => LightDevice(
-            id: d['thingName'],
-            name: d['thingName'],
-            online: d['online'],
-            luz1: d['luz1'] == 'ON',
-            luz2: d['luz2'] == 'ON',
-          ),
-        )
+        .map((d) => LightDevice(
+          id: d['thingName'], 
+          name: d['thingName'], 
+          online: d['online'],
+          luz1: d['luz1'] == 'ON',
+          luz2: d['luz2'] == 'ON',
+          ))
         .toList();
   }
 
@@ -67,7 +66,7 @@ class ApiIotRepository implements IotRepository {
     // Llama a la API para obtener el estado (sombra) de un dispositivo.
     return _apiService.getDeviceState(deviceId);
   }
-
+  
   @override
   Future<void> sendCommand(String deviceId, String commandPayload) {
     // Llama a la API para enviar un comando POST al dispositivo.

@@ -41,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 50,
-          // Un CircleAvatar se ve más personal que un ícono
+          // MODIFICADO: Un CircleAvatar se ve más personal que un ícono
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           child: Text(
             initial,
@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
           displayName,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
-        // Mostrar el email del usuario (requiere añadirlo al ViewModel)
+        // AÑADIDO: Mostrar el email del usuario (requiere añadirlo al ViewModel)
         Text(
           viewModel.userEmail ?? '', // Asumiendo que añades `userEmail` al ViewModel
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
@@ -70,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
     // final themeProvider = context.read<ThemeProvider>(); // Descomentar si tienes ThemeProvider
 
     return Card(
-      // Agrupamos las opciones en una tarjeta para mejor organización
+      // AÑADIDO: Agrupamos las opciones en una tarjeta para mejor organización
       child: Column(
         children: [
           SwitchListTile.adaptive(
@@ -118,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
           elevation: 0,
         ),
         onPressed: () {
-          // Diálogo de confirmación antes de cerrar sesión
+          // AÑADIDO: Diálogo de confirmación antes de cerrar sesión
           showDialog(
             context: context,
             builder: (dialogContext) => AlertDialog(

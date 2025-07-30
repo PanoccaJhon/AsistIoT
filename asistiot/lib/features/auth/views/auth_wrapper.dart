@@ -18,15 +18,14 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         // Mientras esperamos el primer dato, mostramos un loader
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         // Si el estado es 'signedIn', mostramos la pantalla principal
         if (snapshot.data == AuthStatus.signedIn) {
           return const MainScreen();
         }
+        
         // Para cualquier otro caso (signedOut, sessionExpired, error), mostramos el login
         else {
           return const LoginScreen();

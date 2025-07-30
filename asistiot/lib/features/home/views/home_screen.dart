@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     
-    //RefreshIndicator para "pull-to-refresh"
+    // AÑADIDO: RefreshIndicator para "pull-to-refresh"
     return RefreshIndicator.adaptive(
       onRefresh: viewModel.refresh,
       child: ListView.builder(
@@ -112,7 +112,7 @@ class _DeviceCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-      // Cambia el color y la sombra si está desconectado para un efecto visual más claro.
+      // MODIFICADO: Cambia el color y la sombra si está desconectado para un efecto visual más claro.
       color: isOnline ? null : Theme.of(context).colorScheme.surface.withOpacity(0.5),
       elevation: isOnline ? null : 0.5,
       child: ListTile(

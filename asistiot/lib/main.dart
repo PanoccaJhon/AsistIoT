@@ -16,11 +16,20 @@ import 'features/auth/views/auth_wrapper.dart';
 
 import 'config/app_colors.dart';
 
+import 'package:hive_flutter/hive_flutter.dart';
+import 'data/models/routine.dart'; // Importa el modelo
+import 'core/services/background_service.dart'; // Importa el servicio
+
 // La función main ahora es asíncrona para esperar a Amplify
 Future<void> main() async {
   // <-- MODIFICADO
   // Es necesario para asegurar que Flutter esté listo antes de llamar a código nativo
   WidgetsFlutterBinding.ensureInitialized(); // <-- NUEVO
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(RoutineAdapter()); // Registra el adaptador generado
+
+  await initializeBackgroundService();
 
   // Configuramos Amplify antes de correr la app
   await _configureAmplify(); // <-- NUEVO

@@ -27,14 +27,17 @@ class HomeViewModel extends ChangeNotifier {
   String? _userDisplayName;
   String? get userDisplayName => _userDisplayName;
 
+  // AÑADIDO: Estado para el email del usuario
   String? _userEmail;
   String? get userEmail => _userEmail;
 
+  // ------------------------------------------
   bool _isListening = false;
   bool get isListening => _isListening;
   
   String _lastRecognizedWords = "";
   String get lastRecognizedWords => _lastRecognizedWords;
+  // ------------------------------------------
 
   // --- LÓGICA / ACCIONES ---
   void _initSpeech() async {
@@ -69,7 +72,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
   
-  // Guarda datos del usuario y el email.
+  // MODIFICADO: Ahora también obtiene y guarda el email.
   Future<void> _loadCurrentUser() async {
     try {
       final attributes = await Amplify.Auth.fetchUserAttributes();
@@ -90,6 +93,7 @@ class HomeViewModel extends ChangeNotifier {
       _userDisplayName = nameAttribute.value;
       _userEmail = emailAttribute.value;
 
+      // AÑADIDO: Buscar el email y guardarlo en su propia variable.
       try {
         final emailAttribute = attributes.firstWhere(
           (element) => element.userAttributeKey == AuthUserAttributeKey.email,

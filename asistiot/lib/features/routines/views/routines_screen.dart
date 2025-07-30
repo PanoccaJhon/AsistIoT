@@ -1,80 +1,102 @@
+import 'package:asistiot_project/features/home/viewmodels/home_viewmodel.dart';
 import 'package:flutter/material.dart';
-
-// Modelo de datos de ejemplo. Luego lo reemplazarás con tu modelo real.
-class _Routine {
-  final String title;
-  final String time;
-  final String days;
-  final IconData icon;
-  bool isActive;
-
-  _Routine({
-    required this.title,
-    required this.time,
-    required this.days,
-    required this.icon,
-    this.isActive = true,
-  });
-}
+import 'package:provider/provider.dart';
+import '../../../data/models/routine.dart'; // Importa el modelo de datos correcto
+import '../viewmodels/routines_viewmodel.dart'; // Importa el ViewModel
+import 'add_routine_screen.dart'; // Importa la pantalla para añadir rutinas
 
 class RoutinesScreen extends StatelessWidget {
   const RoutinesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // --- DATOS DE EJEMPLO (se reemplazarán con el ViewModel) ---
-    final List<_Routine> routines = [
-      _Routine(
-        title: 'Apagar luces de noche',
-        time: '11:00 PM',
-        days: 'Todos los días',
-        icon: Icons.bedtime_outlined,
-        isActive: true,
-      ),
-      _Routine(
-        title: 'Alarma despertador',
-        time: '6:30 AM',
-        days: 'Lunes a Viernes',
-        icon: Icons.alarm_on_rounded,
-        isActive: true,
-      ),
-      _Routine(
-        title: 'Encender luces al atardecer',
-        time: '6:00 PM',
-        days: 'Sáb, Dom',
-        icon: Icons.wb_sunny_outlined,
-        isActive: false,
-      ),
-    ];
-    // ---------------------------------------------------------
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mis Rutinas'),
-        centerTitle: true,
-      ),
-      body: routines.isEmpty
-          ? _buildEmptyState()
-          : _buildRoutinesList(routines),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Navegar a una pantalla para crear una nueva rutina
+    // 1. El ChangeNotifierProvider se mantiene aquí
+    return ChangeNotifierProvider(
+      create: (context) => RoutinesViewModel(),
+      // 2. Usamos un Consumer para obtener un nuevo `context` que "ve" el ViewModel
+      child: Consumer<RoutinesViewModel>(
+        builder: (context, viewModel, child) {
+          // Este 'context' ahora SÍ tiene acceso a RoutinesViewModel
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Mis Rutinas'),
+              centerTitle: true,
+            ),
+            body: viewModel.isLoading
+                ? const Center(child: CircularProgressIndicator.adaptive())
+                : viewModel.routines.isEmpty
+                    ? _buildEmptyState()
+                    : _buildRoutinesList(viewModel),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                // 3. Pasamos el `context` del builder a la función del diálogo
+                _showDeviceSelectionDialog(context);
+              },
+              tooltip: 'Añadir Rutina',
+              child: const Icon(Icons.add),
+            ),
+          );
         },
-        tooltip: 'Añadir Rutina',
-        child: const Icon(Icons.add),
       ),
     );
   }
 
-  /// Construye la lista de rutinas si no está vacía.
-  Widget _buildRoutinesList(List<_Routine> routines) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: routines.length,
-      itemBuilder: (context, index) {
-        final routine = routines[index];
-        return _RoutineCard(routine: routine);
+  /// Muestra un diálogo para que el usuario seleccione un dispositivo.
+  Future<void> _showDeviceSelectionDialog(BuildContext context) async {
+    // Ahora `context` puede encontrar ambos ViewModels
+    final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+    final routinesViewModel = Provider.of<RoutinesViewModel>(context, listen: false);
+    
+    final devices = homeViewModel.devices;
+
+    final selectedDeviceId = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return SimpleDialog(
+          title: const Text('Selecciona un dispositivo'),
+          children: devices.map((device) {
+            return SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(dialogContext, device.id); 
+              },
+              child: Text(device.name),
+            );
+          }).toList(),
+        );
       },
+    );
+
+    if (selectedDeviceId != null && context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: routinesViewModel,
+            child: AddRoutineScreen(deviceId: selectedDeviceId),
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Construye la lista de rutinas usando los datos del ViewModel.
+  Widget _buildRoutinesList(RoutinesViewModel viewModel) {
+    // 4. Se añade RefreshIndicator para la funcionalidad de "deslizar para actualizar"
+    return RefreshIndicator(
+      onRefresh: viewModel.refresh,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(8.0),
+        itemCount: viewModel.routines.length,
+        itemBuilder: (context, index) {
+          final routine = viewModel.routines[index];
+          return _RoutineCard(
+            routine: routine,
+            // 5. Se pasa la función del ViewModel al onChanged del Switch
+            onToggle: (newValue) {
+              viewModel.toggleRoutineStatus(routine, newValue);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -103,30 +125,45 @@ class RoutinesScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }
 
 /// Widget para mostrar la tarjeta de una sola rutina.
 class _RoutineCard extends StatelessWidget {
-  const _RoutineCard({required this.routine});
+  // 6. Se actualiza para recibir el modelo 'Routine' y una función de callback
+  const _RoutineCard({required this.routine, required this.onToggle});
 
-  final _Routine routine;
+  final Routine routine;
+  final ValueChanged<bool> onToggle;
+
+  // Helper para formatear los días
+  String _formatDays(List<int> days) {
+    if (days.length == 7) return 'Todos los días';
+    if (days.isEmpty) return 'Nunca';
+    final dayMap = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    return days.map((d) => dayMap[d - 1]).join(', ');
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Formateamos la hora para mostrarla correctamente (ej: 06:05 AM)
+    final time = TimeOfDay(hour: routine.hour, minute: routine.minute);
+    final formattedTime = time.format(context);
+    final formattedDays = _formatDays(routine.days);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
       child: SwitchListTile.adaptive(
         contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         secondary: CircleAvatar(
-          child: Icon(routine.icon),
+          // Aquí puedes mapear el iconCodePoint guardado a un IconData si lo implementas
+          child: const Icon(Icons.timer_outlined), 
         ),
         title: Text(routine.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${routine.days} a las ${routine.time}'),
+        subtitle: Text('$formattedDays a las $formattedTime'),
         value: routine.isActive,
-        onChanged: (bool newValue) {
-          // TODO: Llamar a una función en el ViewModel para activar/desactivar la rutina
-          // viewModel.toggleRoutine(routine.id, newValue);
-        },
+        onChanged: onToggle, // Llama a la función del ViewModel
       ),
     );
   }
