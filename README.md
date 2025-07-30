@@ -1,117 +1,157 @@
-# AsistIoT: Asistente Inteligente para el Hogar
+# AsistIoT: Asistente Inteligente para el Hogar  
+**Control, Automatización y Voz**
 
-![AsistIoT Banner](https://i.imgur.com/your-banner-image.png)
-*[Imagen de un banner promocional para AsistIoT]*
+**AsistIoT** es una solución completa de Internet de las Cosas (IoT) para el control y monitoreo inteligente del hogar. Este proyecto integra un dispositivo físico basado en **ESP32**, una potente infraestructura en la nube y una aplicación móvil multiplataforma, permitiendo un control total sobre tu entorno a través de toques, automatización y comandos de voz.
 
-**AsistIoT** es una solución completa de Internet de las Cosas (IoT) para el control y monitoreo inteligente del hogar. Este proyecto integra un dispositivo físico basado en ESP32, una potente infraestructura en la nube y una aplicación móvil multiplataforma, permitiendo un control total sobre tu entorno a través de toques, automatización y comandos de voz.
+---
 
 ## ✨ Características Principales
 
-* **Control Remoto e Inteligente:** Enciende y apaga luces desde cualquier lugar del mundo.
-* **Modo Automático:** Deja que el sistema active las luces de forma inteligente basándose en la detección de movimiento y el nivel de luz ambiental.
-* **Aprovisionamiento Seguro por Bluetooth:** Configura fácilmente nuevos dispositivos en tu red WiFi de forma segura a través de Bluetooth Low Energy (BLE).
-* **Control por Voz Avanzado:** Utiliza tu voz para controlar los dispositivos gracias a la integración con **Google Cloud Speech-to-Text** y **Dialogflow**.
-* **Monitoreo en Tiempo Real:** Conoce el estado de conexión de tus dispositivos y visualiza los datos de los sensores directamente en la app.
-* **Historial de Eventos:** Consulta un registro de todos los eventos de movimiento detectados por tus sensores.
-* **Gestión de Usuarios Segura:** Sistema completo de autenticación (registro, inicio de sesión, confirmación) manejado por AWS Cognito.
-* **Interfaz de Usuario Moderna:** Una aplicación limpia y reactiva construida con Flutter, disponible para Android e iOS.
+- **Control Remoto e Inteligente:** Enciende y apaga luces desde cualquier lugar del mundo.  
+- **Modo Automático:** Activa luces basándose en la detección de movimiento y nivel de luz.  
+- **Aprovisionamiento Seguro por Bluetooth:** Configura nuevos dispositivos en tu red WiFi usando BLE.  
+- **Control por Voz Avanzado:** Integración con Google Cloud Speech-to-Text y Dialogflow.  
+- **Monitoreo en Tiempo Real:** Visualiza el estado de conexión y sensores desde la app.  
+- **Historial de Eventos:** Revisa eventos de movimiento registrados.  
+- **Gestión de Usuarios Segura:** Autenticación completa con AWS Cognito.  
+- **Interfaz Moderna:** Aplicación Flutter, limpia y responsiva, para Android e iOS.  
 
 ---
 
 ## 📖 Guía de Instalación y Uso (Para el Usuario Final)
 
-¡Bienvenido a AsistIoT! Sigue estos sencillos pasos para configurar tu dispositivo y empezar a disfrutar de un hogar más inteligente.
-
 ### ¿Qué necesitas?
 
-* El dispositivo físico AsistIoT.
-* Un smartphone (Android o iOS).
-* Una red WiFi de 2.4 GHz con conexión a internet.
+- El dispositivo físico AsistIoT.  
+- Un smartphone (Android o iOS).  
+- Una red WiFi de 2.4 GHz con acceso a internet.  
 
-### Paso 1: Instala la Aplicación AsistIoT
+---
 
-1.  Descarga la aplicación AsistIoT desde la **Google Play Store** (para Android) o la **App Store** (para iOS).
-2.  Instálala en tu smartphone.
+### 🚀 Paso 1: Instala la Aplicación AsistIoT
 
-### Paso 2: Crea tu Cuenta
+**Android:**  
+Puedes descargar el archivo de instalación (APK) desde este repositorio.  
+➡️ [Descargar la aplicación (app.apk)](./build_outputs/app-release.apk)
 
-1.  Abre la aplicación AsistIoT.
-2.  Toca el botón **"Registrarse"**.
-3.  Introduce tu dirección de correo electrónico y crea una contraseña segura.
-4.  Recibirás un **código de confirmación** en tu correo. Introdúcelo en la aplicación para verificar tu cuenta.
-5.  Una vez verificado, inicia sesión con tu nuevo usuario y contraseña.
+> _Nota: Es posible que necesites habilitar la opción "Instalar desde fuentes desconocidas" en la configuración de tu teléfono._
 
-### Paso 3: Configura tu Dispositivo AsistIoT por Primera Vez
+**iOS:**  
+Disponible próximamente en la App Store.
 
-Esta configuración inicial solo se realiza una vez.
+---
 
-1.  **Enchufa tu dispositivo AsistIoT** a una fuente de alimentación. La pantalla OLED se encenderá y mostrará un mensaje indicando que está en **"Modo de Configuración BLE"**.
-2.  En la aplicación, asegúrate de que el Bluetooth de tu teléfono esté activado.
-3.  Toca el botón **"+"** o **"Añadir Dispositivo"**.
-4.  La aplicación buscará dispositivos cercanos. Selecciona tu dispositivo **"AsistIoT_ESP32_PE"** de la lista.
-5.  Se te pedirá que introduzcas el **nombre y la contraseña de tu red WiFi**.
-6.  Toca **"Conectar"**. La aplicación enviará las credenciales al dispositivo de forma segura.
-7.  El dispositivo se reiniciará y su pantalla mostrará el estado mientras se conecta a tu WiFi y a la nube. ¡Y listo!
+### 👤 Paso 2: Crea tu Cuenta
 
-### Paso 4: ¡Disfruta de tu Hogar Inteligente!
+1. Abre la aplicación AsistIoT.  
+2. Pulsa **"Registrarse"**.  
+3. Ingresa tu correo electrónico y una contraseña segura.  
+4. Revisa tu correo y coloca el código de confirmación en la app.  
+5. Inicia sesión con tus nuevas credenciales.
 
-Una vez configurado, tu dispositivo aparecerá en la pantalla principal de la aplicación.
+---
 
-* **Toca el dispositivo** para acceder a la pantalla de detalles.
-* **Controla las luces:** Usa los interruptores para encender o apagar las luces manualmente.
-* **Activa el Modo Automático:** Permite que el dispositivo controle las luces por ti.
-* **Usa tu voz:** Toca el **botón del micrófono** y di comandos como *"enciende la luz del dormitorio"* o *"activa el modo automático"*.
-* **Consulta el historial:** Ve al historial para ver cuándo se detectó movimiento.
-* **Refresca el estado:** Desliza el dedo hacia abajo en la pantalla de detalles para actualizar los datos de los sensores en tiempo real.
+### 🔧 Paso 3: Configura tu Dispositivo AsistIoT
 
-### Solución de Problemas
+1. Enchufa tu dispositivo AsistIoT.  
+2. La pantalla OLED mostrará "Modo de Configuración BLE".  
+3. Asegúrate de que el Bluetooth del teléfono esté activado.  
+4. Pulsa **"+"** en la app para añadir un dispositivo.  
+5. Selecciona **"AsistIoT_ESP32_PE"** de la lista.  
+6. Ingresa el nombre y contraseña de tu red WiFi.  
+7. Pulsa **"Conectar"**.  
+8. El dispositivo se reiniciará y se conectará a la nube. ¡Listo!
 
-* **¿El dispositivo no se conecta?** Asegúrate de que la contraseña de tu WiFi sea correcta y que la red sea de 2.4 GHz.
-* **¿Quieres cambiar de red WiFi?** Mantén presionado el botón físico del dispositivo AsistIoT durante 5 segundos. La pantalla indicará que las credenciales se han borrado y el dispositivo volverá al modo de configuración. Repite el Paso 3.
+---
+
+### 🏠 Paso 4: ¡Disfruta de tu Hogar Inteligente!
+
+- **Control Manual:** Toca para encender o apagar luces.  
+- **Modo Automático:** El dispositivo tomará decisiones inteligentes.  
+- **Control por Voz:** Usa comandos como _"enciende la luz del dormitorio"_.  
+- **Historial de Movimiento:** Revisa registros de detección.  
+- **Refrescar Estado:** Desliza hacia abajo para actualizar sensores.
 
 ---
 
 ## 🛠️ Documentación para Desarrolladores
 
-Esta sección contiene información sobre la arquitectura y cómo configurar el entorno de desarrollo.
+### 🧱 Pila Tecnológica
 
-### Pila Tecnológica
+- **Firmware (ESP32):**  
+  C++, Arduino, PubSubClient, ArduinoJson, Adafruit GFX/SSD1306, BLEDevice.  
 
-* **Firmware (ESP32):** C++ (Arduino), PubSubClient, ArduinoJson, Adafruit GFX/SSD1306, BLEDevice.
-* **Nube (AWS):** IoT Core, DynamoDB, Lambda (Python), API Gateway, Cognito.
-* **Nube (GCP):** Cloud Speech-to-Text, Dialogflow.
-* **App Móvil (Flutter):** Provider, http, googleapis_auth, record, google_speech.
+- **Nube (AWS):**  
+  IoT Core, DynamoDB, Lambda (Python), API Gateway, Cognito.  
 
-### Arquitectura del Sistema
+- **Nube (GCP):**  
+  Cloud Speech-to-Text, Dialogflow.  
 
-El sistema sigue una arquitectura desacoplada y escalable:
+- **App Móvil (Flutter):**  
+  Provider, http, googleapis_auth, record, google_speech.
 
-1.  **Dispositivo (ESP32):** Actúa como un cliente MQTT que se comunica exclusivamente con AWS IoT Core. Publica telemetría y eventos, y se suscribe a un tópico de comandos.
-2.  **Nube (AWS + GCP):**
-    * **AWS IoT Core** es el broker MQTT central. Las **Reglas de IoT** procesan los mensajes y los persisten en **DynamoDB**.
-    * La **API Gateway** expone endpoints RESTful protegidos por **Cognito**.
-    * Las funciones **Lambda** contienen la lógica de negocio (consultar DynamoDB, publicar en IoT Core).
-    * Para los comandos de voz, la app utiliza **GCP Speech-to-Text** para la transcripción y **Dialogflow** para la NLU. El resultado se envía a la API de AWS.
-3.  **Aplicación (Flutter):** Sigue un patrón MVVM. Se autentica con **Cognito** y utiliza el token JWT para realizar llamadas seguras a la API Gateway.
+---
 
-### Configuración del Entorno de Desarrollo
+### 🧩 Arquitectura del Sistema
 
-1.  **Backend:**
-    * Configura un User Pool en **Cognito**.
-    * Crea las tres tablas en **DynamoDB** (`AsistIoT_DeviceData`, `AsistIoT_DeviceConnectionStatus`, `AsistIoT_MotionHistory`).
-    * Despliega las funciones **Lambda** en Python y asígnales los roles de IAM necesarios.
-    * Configura la **API Gateway** con los endpoints y la integración con Lambda y Cognito.
-    * En **IoT Core**, crea un "Thing", genera los certificados y configura las Reglas de IoT.
-    * En **GCP**, crea un proyecto, habilita las APIs, crea un agente de Dialogflow y genera un archivo de credenciales de cuenta de servicio.
-2.  **Firmware (ESP32):**
-    * Abre el sketch `.ino` en la IDE de Arduino.
-    * Instala las librerías requeridas desde el Gestor de Librerías.
-    * Crea un archivo `secrets.h` en la carpeta del sketch para almacenar los certificados de AWS y el endpoint de IoT.
-    * Carga el firmware al ESP32.
-3.  **Aplicación (Flutter):**
-    * Clona el repositorio.
-    * Configura Amplify con `amplify init` para generar `amplifyconfiguration.dart`.
-    * Coloca el archivo de credenciales de GCP en la carpeta `assets/`.
-    * Actualiza el `projectId` de GCP en `lib/core/services/voice_service.dart`.
-    * Ejecuta `flutter pub get`.
-    * Ejecuta la aplicación en un dispositivo físico con `flutter run`.
+#### **Dispositivo (ESP32):**  
+Cliente MQTT → Publica telemetría y eventos → Se suscribe a comandos desde AWS IoT Core.
+
+#### **Nube (AWS + GCP):**
+
+- **AWS IoT Core:** Broker MQTT central.  
+- **DynamoDB:** Persistencia de datos.  
+- **API Gateway:** Endpoints RESTful protegidos por Cognito.  
+- **Lambda:** Lógica de negocio.  
+- **GCP:**  
+  - Speech-to-Text: Transcripción de voz.  
+  - Dialogflow: Procesamiento del lenguaje natural (NLU).
+
+#### **Aplicación (Flutter):**  
+MVVM + JWT para autenticación segura contra API Gateway.
+
+---
+
+## ⚙️ Configuración del Entorno de Desarrollo
+
+### 🔙 Backend
+
+1. Configura un **User Pool en Cognito**.  
+2. Crea las siguientes tablas en **DynamoDB**:  
+   - `AsistIoT_DeviceData`  
+   - `AsistIoT_DeviceConnectionStatus`  
+   - `AsistIoT_MotionHistory`  
+3. Despliega funciones **Lambda** en Python.  
+4. Configura **API Gateway** con endpoints REST y vinculación con Lambda y Cognito.  
+5. En **AWS IoT Core**:  
+   - Crea un "Thing"  
+   - Genera certificados  
+   - Define Reglas de IoT.  
+6. En **Google Cloud Platform**:  
+   - Crea un proyecto  
+   - Habilita APIs necesarias  
+   - Configura Dialogflow y credenciales JSON.
+
+---
+
+### 🔌 Firmware (ESP32)
+
+1. Abre el archivo `.ino` en Arduino IDE.  
+2. Instala librerías requeridas.  
+3. Crea un archivo `secrets.h` con certificados de AWS y endpoint MQTT.  
+4. Sube el firmware al ESP32.
+
+---
+
+### 📱 Aplicación Flutter
+
+1. Clona el repositorio.  
+2. Ejecuta `amplify init` para generar `amplifyconfiguration.dart`.  
+3. Crea carpeta `assets/` si no existe.  
+4. Coloca tu archivo JSON de credenciales de GCP en esa carpeta.  
+5. Declara `assets/` en `pubspec.yaml`.  
+6. Actualiza el `projectId` en `lib/core/services/voice_service.dart`.  
+7. Ejecuta:  
+   ```bash
+   flutter pub get
+   flutter run
