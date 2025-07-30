@@ -5,27 +5,36 @@
 #include <ArduinoJson.h>
 #include <Wire.h>
 #include <BH1750.h>
-#include "secrets.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-#include <Preferences.h>     // <-- NUEVO: Para guardar credenciales WiFi
-#include <BLEDevice.h>       // <-- NUEVO: Librerías para Bluetooth
+
+#include "secrets.h"
+#include "graphics.h"
+
+#include <Preferences.h>
+#include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
 // --- PINES Y CONFIGURACIÓN ---
-#define PIR_PIN 10
-#define RELAY1_PIN 7
-#define RELAY2_PIN 6
-#define I2C_SDA 8
-#define I2C_SCL 9
-#define RESET_BUTTON_PIN 1
+#define PIR_PIN 2
+#define RELAY1_PIN 0
+#define RELAY2_PIN 1
+#define I2C_SDA 6
+#define I2C_SCL 7
+#define RESET_BUTTON_PIN 3
 
-#define LUX_THRESHOLD 100
+#define SCREEN_WIDTH 128 // Ancho de la pantalla OLED
+#define SCREEN_HEIGHT 64 // Alto de la pantalla OLED
+#define OLED_RESET -1    // Pin de reset (-1 si no se usa)
+
+#define LUX_THRESHOLD 5
 #define TELEMETRY_INTERVAL 30000
 #define MOTION_TIMEOUT 60000
 #define LONG_PRESS_DURATION 5000
 
-// --- CONFIGURACIÓN BLE (deben coincidir con la app Flutter) --- // <-- NUEVO
+// --- CONFIGURACIÓN BLE
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
@@ -45,13 +54,18 @@ float currentLux = 0;
 bool lastMotionState = false;
 unsigned long lastPublishTime = 0;
 unsigned long lastMotionTime = 0;
+char* msg_main = "- - - - - - - - ...";
+bool pub_state = false;
+bool sub_state = false;
 
 WiFiClientSecure net;
 PubSubClient client(net);
 BH1750 lightMeter;
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Preferences preferences; // Objeto para almacenamiento persistente
 
 // --- DECLARACIÓN DE FUNCIONES ---
+void displayMessage(const char* message, int size = 1, bool clear = true);
 void setupTopics();
 void startNormalMode(String ssid, String password);
 void connectAWS(String ssid, String password);
@@ -64,43 +78,56 @@ void controlLight(const char* lightId, bool state);
 void setupBLEProvisioning(); 
 void checkResetButton(); 
 void clearWifiCredentialsAndReboot(); 
+void updateDisplay();
+void startDisplay();
 
 // --- Clase para manejar los eventos de escritura BLE ---
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-      //std::string stdValue = pCharacteristic->getValue();
-      //String value = stdValue.c_str();
       String value = pCharacteristic->getValue();
 
       if (value.length() > 0) {
         Serial.println("*********");
-        Serial.print("Nuevo valor recibido: ");
-        Serial.println(value); // Serial.println funciona perfectamente con String
+        Serial.print("Nuevo comando recibido: ");
+        Serial.println(value.c_str());
 
-        // Parsear el JSON recibido
-        StaticJsonDocument<128> doc;
-        // deserializeJson también funciona perfectamente con String
+        // Usamos ArduinoJson para parsear el comando
+        JsonDocument doc;
         DeserializationError error = deserializeJson(doc, value);
 
         if (error) {
-          Serial.print(F("deserializeJson() falló: "));
+          Serial.print("deserializeJson() falló: ");
           Serial.println(error.c_str());
           return;
         }
 
-        String ssid = doc["ssid"];
-        String pass = doc["pass"];
+        // LÓGICA CONDICIONAL: ¿Es un comando de credenciales o de reinicio?
 
-        Serial.println("Guardando credenciales WiFi...");
-        preferences.begin("wifi-creds", false);
-        preferences.putString("ssid", ssid);
-        preferences.putString("pass", pass);
-        preferences.end();
-        
-        Serial.println("Credenciales guardadas. El dispositivo se reiniciará en 3 segundos.");
-        delay(3000);
-        ESP.restart();
+        // 1. Si el JSON contiene la clave "ssid", guardamos las credenciales
+        if (doc.containsKey("ssid")) {
+          const char* ssid = doc["ssid"];
+          const char* pass = doc["pass"];
+
+          Serial.println("Guardando credenciales WiFi en NVS...");
+          preferences.begin("wifi-creds", false);
+          preferences.putString("ssid", ssid);
+          preferences.putString("pass", pass);
+          preferences.end();
+          displayMessage("Credenciales guardadas. Esperando comando de reinicio.");
+        }
+
+        // 2. Si el JSON contiene la clave "action" y el valor es "restart"...
+        if (doc.containsKey("action")) {
+          const char* action = doc["action"];
+          if (strcmp(action, "restart") == 0) {
+            Serial.println("Comando de reinicio recibido. Reiniciando en 2 segundos...");
+            delay(10000);
+            ESP.restart();
+          }
+        }
+        Serial.println("*********");
       }
+      delay(100);
     }
 };
 
@@ -109,6 +136,19 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // El 0x3C es la dirección I2C común
+    Serial.println(F("Fallo al iniciar la pantalla SSD1306"));
+    // En un caso real, podrías querer detener el programa aquí
+    // pero por ahora, solo lo reportamos.
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Dispositivo Iniciado");
+  display.display();
+  delay(2000); // Muestra el mensaje de inicio por 2 segundos
 
   pinMode(RESET_BUTTON_PIN, INPUT_PULLUP); // Configurar el boton de reinicio
 
@@ -120,44 +160,63 @@ void setup() {
 
   if (savedSsid == "") {
     // No hay credenciales, iniciar modo de aprovisionamiento BLE
-    Serial.println("No se encontraron credenciales WiFi. Iniciando modo de configuración BLE...");
+    displayMessage("No se encontraron credenciales WiFi. Iniciando modo de configuración BLE...");
     setupBLEProvisioning();
   } else {
     // Hay credenciales, iniciar modo normal
-    Serial.println("Credenciales WiFi encontradas. Iniciando modo normal...");
+    displayMessage("Credenciales WiFi encontradas. Iniciando modo normal...");
     startNormalMode(savedSsid, savedPass);
   }
 }
 
 void loop() {
   checkResetButton();
-  // En modo normal, el loop hace su trabajo. En modo BLE, no hace nada
-  // ya que la lógica está en los callbacks de BLE.
-  if (WiFi.isConnected()) {
 
-    
+  if (WiFi.status() != WL_CONNECTED) {
+      delay(100);
+      return;
+  }
 
-    if (!client.connected()) {
-      checkResetButton();
-      reconnect();
-    }
-    client.loop();
-    handleSensorLogic();
-    
-    if (millis() - lastPublishTime > TELEMETRY_INTERVAL) {
-      publishTelemetry();
-      lastPublishTime = millis();
-    }
+  // Lógica de reconexión y MQTT
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  handleSensorLogic();
+  
+  // Publicar telemetría
+  if (millis() - lastPublishTime > TELEMETRY_INTERVAL) {
+    publishTelemetry();
+    lastPublishTime = millis();
+  }
+
+  static unsigned long lastDisplayUpdate = 0;
+  // Actualizamos la pantalla cada segundo (1000 ms)
+  if (millis() - lastDisplayUpdate > 1000) { 
+    updateDisplay();
+    lastDisplayUpdate = millis();
   }
 }
 
 // --- FUNCIONES ---
+void displayMessage(const char* message, int size, bool clear) {
+  if (clear) {
+    display.clearDisplay();
+  }
+  display.setTextSize(size);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println(message);
+  display.display(); // ¡Muy importante! Esto actualiza la pantalla.
+}
+
 void checkResetButton() {
   // Leemos el estado del botón. LOW significa que está presionado.
   if (digitalRead(RESET_BUTTON_PIN) == LOW) {
     // Si es la primera vez que detectamos la pulsación, guardamos el tiempo
     if (buttonPressStartTime == 0) {
-      Serial.println("Botón de reseteo presionado. Mantén presionado por 5 segundos...");
+      Serial.println("Boton de reseteo presionado. Manten presionado por 5 segundos...");
+      displayMessage("Boton de reseteo presionado. Manten presionado por 5 segundos...");
       buttonPressStartTime = millis();
     }
     // Si se ha mantenido presionado por más de 5 segundos y no hemos actuado ya
@@ -184,6 +243,7 @@ void clearWifiCredentialsAndReboot() {
   preferences.end();
   
   Serial.println("Credenciales borradas. Reiniciando en 3 segundos para entrar en modo de configuración...");
+  displayMessage("Credenciales borradas. Reiniciando en 3 segundos para entrar en modo de configuración...");
   delay(3000);
   ESP.restart();
 }
@@ -210,7 +270,7 @@ void setupBLEProvisioning() { // <-- NUEVO
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pServer->getAdvertising()->start();
 
-  Serial.println("Servidor BLE iniciado. Esperando conexión desde la app...");
+  startDisplay();
 }
 
 
@@ -237,12 +297,14 @@ void startNormalMode(String ssid, String password) {
 void connectAWS(String ssid, String password) { // Modificado para recibir credenciales
   WiFi.begin(ssid.c_str(), password.c_str());
   Serial.println("Conectando a WiFi...");
+  displayMessage("Conectando a Wifi...");
   Serial.println("Credenciales: ");
   Serial.println(ssid.c_str());
   Serial.println(password.c_str());
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    checkResetButton();
   }
   Serial.println("\nWiFi Conectado.");
   Serial.print("Dirección IP: ");
@@ -259,8 +321,7 @@ void connectAWS(String ssid, String password) { // Modificado para recibir crede
 }
 
 // El resto de funciones (reconnect, handleSensorLogic, publish, etc.)
-// permanecen exactamente iguales a como las tenías.
-// ... (pega aquí el resto de tus funciones sin cambios) ...
+
 void setupTopics() {
  sprintf(TELEMETRY_TOPIC, "telemetria/%s/datos", THING_NAME);
  sprintf(EVENTS_TOPIC, "eventos/%s/alerta", THING_NAME);
@@ -277,6 +338,7 @@ void reconnect() {
  while (!client.connected()) {
    if (client.connect(THING_NAME, "", "", CONNECTION_STATE_TOPIC, 1, true, lwt_payload)) {
      Serial.println("Conectado a AWS IoT!");
+     displayMessage("Conectado a AWS IoT!");
      
      // Publicar estado "online"
      client.publish(CONNECTION_STATE_TOPIC, "{\"online\": true}", true); // `true` para mensaje retenido
@@ -307,6 +369,20 @@ void handleSensorLogic() {
  lastMotionState = currentMotion;
 
  if (autoMode) {
+
+   if (currentLux < LUX_THRESHOLD) {
+    if(!relay2State){
+      Serial.println("Modo Auto: Encendiendo luz 2...");
+      controlLight("luz2", HIGH);
+    }
+   } else {
+    if(relay2State) {
+      Serial.println("Modo Auto: Apagando luz 2...");
+      controlLight("luz2", LOW);
+    }
+   }
+
+
    if (currentMotion && currentLux < LUX_THRESHOLD) {
      if (!relay1State) {
        Serial.println("Modo Auto: Encendiendo Luz 1...");
@@ -354,6 +430,7 @@ void publishTelemetry() {
 
  client.publish(TELEMETRY_TOPIC, jsonBuffer);
  Serial.print("Publicando Telemetría: ");
+ pub_state = true;
  Serial.println(jsonBuffer);
 }
 
@@ -368,40 +445,110 @@ void publishEvent(const char* eventType, const char* message) {
  
  client.publish(EVENTS_TOPIC, jsonBuffer);
  Serial.print("Publicando Evento: ");
+ pub_state = true;
  Serial.println(jsonBuffer);
 }
 
 void messageHandler(char* topic, byte* payload, unsigned int length) {
- Serial.print("Comando recibido en [");
- Serial.print(topic);
- Serial.println("]: ");
+  Serial.print("Comando recibido en [");
+  sub_state = true;
+  Serial.print(topic);
+  Serial.println("]: ");
 
- StaticJsonDocument<256> doc;
- DeserializationError error = deserializeJson(doc, payload, length);
+  // Usamos un JsonDocument dinámico para mayor flexibilidad
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, payload, length);
 
- if (error) {
-   Serial.print(F("deserializeJson() falló: "));
-   Serial.println(error.c_str());
-   return;
- }
+  if (error) {
+    Serial.print(F("deserializeJson() falló: "));
+    Serial.println(error.c_str());
+    return;
+  }
+  
+  // Convertimos el documento a un objeto para poder iterar sobre él
+  JsonObject command = doc.as<JsonObject>();
+  
+  // Iteramos sobre cada par clave-valor en el JSON recibido
+  for (JsonPair kv : command) {
+    const char* key = kv.key().c_str(); // ej: "luz1"
+    
+    if (strcmp(key, "luz1") == 0) {
+      bool value = (strcmp(kv.value().as<const char*>(), "ON") == 0);
+      Serial.println("...Orden para luz1");
+      autoMode = false; // Comando manual desactiva modo auto
+      controlLight("luz1", value);
 
- const char* componente = doc["componente"];
- 
- if (strcmp(componente, "luz1") == 0) {
-   bool value = (strcmp(doc["valor"], "ON") == 0);
-   Serial.println("...Orden para luz1");
-   autoMode = false; // Comando manual desactiva modo auto
-   controlLight("luz1", value);
- } 
- else if (strcmp(componente, "luz2") == 0) {
-   bool value = (strcmp(doc["valor"], "ON") == 0);
-   Serial.println("...Orden para luz2");
-   controlLight("luz2", value);
- }
- else if (strcmp(componente, "modo_auto") == 0) {
-   bool value = doc["valor"];
-   Serial.println("...Orden para modo_auto");
-   autoMode = value;
-   publishTelemetry(); // Publicar el cambio de estado de la config
- }
+    } else if (strcmp(key, "luz2") == 0) {
+      bool value = (strcmp(kv.value().as<const char*>(), "ON") == 0);
+      Serial.println("...Orden para luz2");
+      controlLight("luz2", value);
+
+    } else if (strcmp(key, "modo_auto") == 0) {
+      bool value = kv.value().as<bool>();
+      Serial.println("...Orden para modo_auto");
+      autoMode = value;
+    }
+  }
+  // Publicamos la telemetría para que la app refleje los cambios inmediatamente
+  publishTelemetry(); 
+}
+
+void startDisplay(){
+  display.clearDisplay();
+  display.setCursor(2,0);
+  display.print("Sincronizar con APP");
+  display.drawBitmap(10,20, bluetooth_icon, 32,32, SSD1306_WHITE);
+  display.display(); 
+}
+
+void updateDisplay() {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  // --- BARRA DE ESTADO SUPERIOR ---
+
+  // Ícono de WiFi: se muestra si estamos conectados
+  if (WiFi.status() == WL_CONNECTED) {
+    display.drawBitmap(0, 0, wifi_icon, 16, 16, SSD1306_WHITE);
+  }
+
+  // Pub / Sub state : icono de envio o recepcion de datos
+  if (pub_state){
+    display.drawBitmap(20,0, upload_icon, 16, 16, SSD1306_WHITE);
+  }else if(sub_state){
+    display.drawBitmap(20,0, download_icon, 16, 16, SSD1306_WHITE);
+  }
+
+
+  // Estado del Modo Auto en la esquina superior derecha
+  display.setTextSize(1);
+  display.setCursor(80, 5);
+  display.print("AUTO:");
+  display.print(autoMode ? "ON" : "OFF");
+
+  // --- ÁREA DE DATOS PRINCIPAL ---
+  display.setCursor(64, 22);
+  display.setTextSize(2);
+  display.print(String(currentLux, 0)); // Valor del sensor de luz en grande
+  display.setTextSize(1);
+  display.print(" lux");
+
+  // Luz 1
+  display.drawBitmap(7, 20, relay1State ? light_on_icon : light_off_icon, 16, 16, SSD1306_WHITE);
+  display.setCursor(7, 40);
+  display.print("Luz1");
+
+  // Luz 2
+  display.drawBitmap(39, 20, relay2State ? light_on_icon : light_off_icon, 16, 16, SSD1306_WHITE);
+  display.setCursor(39, 40);
+  display.print("Luz2");
+
+  // --- BARRA DE ESTADO INFERIOR ---
+
+  display.setCursor(1, 55);
+  display.setTextSize(1);
+  display.print(msg_main);
+
+  // Actualizar la pantalla
+  display.display();
 }
