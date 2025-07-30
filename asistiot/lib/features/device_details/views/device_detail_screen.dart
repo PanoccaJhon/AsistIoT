@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/iot_repository.dart'; // Necesario para la inyección
 import '../viewmodels/device_detail_viewmodel.dart';
+import '../../history/views/history_screen.dart';
+
 // Asumiendo que tienes una pantalla de historial
 // import 'history_screen.dart'; 
 
@@ -195,10 +197,9 @@ class DeviceDetailScreen extends StatelessWidget {
                       icon: const Icon(Icons.history_rounded),
                       label: const Text('Ver Historial de Movimientos'),
                       onPressed: () {
-                        // Navegar a la pantalla de historial
-                        // Navigator.of(context).push(MaterialPageRoute(
-                        //   builder: (context) => HistoryScreen(deviceId: device.id),
-                        // ));
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => HistoryScreen(deviceId: device.id),
+                        ));
                       },
                     ),
 
